@@ -47,7 +47,7 @@ To run the model press Reset, adjust the frame rate, vehicle density and max spe
 * ``run.py``: Launches the model visualization server. Can be run using the command ``mesa runserver``.
 * ``schelling.py``: Contains the agent class, and the overall model class.
 * ``server.py``: Defines classes for visualizing the model in the browser via Mesa's modular server, and instantiates a visualization server.
-* ``analysis.ipybn``: ***NOT UPDATED*** *(Notebook demonstrating how to run experiments and parameter sweeps on the model.)*
+* ``analysis.ipybn``: Jupyter notebook demonstrating basic model usage including a parameter sweep.
 
 ## Further Reading
 
