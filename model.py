@@ -37,12 +37,12 @@ class VehicleAgent(Agent):
 
         # STEP 2: DECELERATION
         distancetonext = 0
+        (xpos, ypos) = self.pos
         for distance in range(self.maxspeed):
             distance += 1
-            testposlist = list(self.pos)
-            testposlist[0] = testposlist[0] + distance
-            testpos = self.model.grid.torus_adj(tuple(testposlist))
-            if self.model.grid.is_cell_empty(testpos):
+            testxpos = xpos + distance
+            adjustedtestpos = self.model.grid.torus_adj((testxpos, ypos))
+            if self.model.grid.is_cell_empty(adjustedtestpos):
                 distancetonext += 1
             else:
                 break
@@ -55,9 +55,9 @@ class VehicleAgent(Agent):
 
         # STEP 4: MOVEMENT
         self._nextPos = self.pos
-        temppos = list(self._nextPos)
-        temppos[0] = temppos[0] + self.speed
-        self._nextPos = self.model.grid.torus_adj(tuple(temppos))
+        (tempx, tempy) = self._nextPos
+        tempx += self.speed
+        self._nextPos = self.model.grid.torus_adj((tempx, tempy))
 
         self.model.totalspeed = self.model.totalspeed + self.speed
 
