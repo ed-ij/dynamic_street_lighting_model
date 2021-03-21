@@ -3,6 +3,8 @@ from mesa.visualization.modules import CanvasGrid, ChartModule, TextElement
 from mesa.visualization.UserParam import UserSettableParameter
 
 from model import NaSchTraffic
+
+# Define some colours for later use
 # Red
 STOPPED_COLOR = ["#FF0000", "#FF9999"]
 # Orange
@@ -13,7 +15,7 @@ FAST_COLOR = ["#2BCB00", "#8EE484"]
 
 class AgentElement(TextElement):
     """
-    Display a text count of how many happy agents there are.
+    Display text for the average speed of the agents.
     """
 
     def __init__(self):
@@ -43,11 +45,12 @@ def vehicle_draw(agent):
 
     return portrayal
 
-
+# define the elements of the visualisation
 agent_element = AgentElement()
 canvas_element = CanvasGrid(vehicle_draw, 60, 1, 1000, 20)
 speed_chart = ChartModule([{"Label": "AverageSpeed", "Color": "Black"}])
 
+# define the parameters of the model
 model_params = {
     "height": 1,
     "width": 60,

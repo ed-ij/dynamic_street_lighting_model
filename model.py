@@ -6,15 +6,16 @@ from mesa.datacollection import DataCollector
 
 class VehicleAgent(Agent):
     """
-    Schelling segregation agent
+    Vehicle agent
     """
 
     def __init__(self, pos, model, maxspeed):
         """
-        Create a new Schelling agent.
+        Create a new vehicle agent.
         Args:
            pos: Agent initial position in x, y.
            model: The model the agent is associated with.
+           maxspeed: The maximum number of cells an agent can move in a single step
         """
         super().__init__(pos, model)
         self.pos = pos
@@ -23,6 +24,13 @@ class VehicleAgent(Agent):
         self._nextPos = None
 
     def step(self):
+        """
+        Calculates the next position of the agent based on several factors:
+        - Current Speed
+        - Max Speed
+        - Proximity of agent ahead of it
+        - Random chance of deceleration
+        """
         # STEP 1: ACCELERATION
         if self.speed < self.maxspeed:
             self.speed += 1
@@ -54,12 +62,15 @@ class VehicleAgent(Agent):
         self.model.totalspeed = self.model.totalspeed + self.speed
 
     def advance(self):
+        """
+        Moves the agent to its next position.
+        """
         self.model.grid.move_agent(self, self._nextPos)
 
 
 class NaSchTraffic(Model):
     """
-    Model class for the Schelling segregation model.
+    Model class for the Nagel and Schreckenberg traffic model.
     """
 
     def __init__(self, height=1, width=60, density=0.2, generalmaxspeed=4, seed=None):
@@ -78,9 +89,8 @@ class NaSchTraffic(Model):
         self.totalspeed = 0
 
         self.datacollector = DataCollector(
-            model_reporters={"AverageSpeed": "averagespeed"},  # Model-level count of happy agents
-            # For testing purposes, agent's individual x and y
-            # {"x": lambda a: a.pos[0], "y": lambda a: a.pos[1]},
+            model_reporters={"AverageSpeed": "averagespeed"},  # Model-level count of average speed of all agents
+            # For testing purposes, agent's individual x position and speed
             agent_reporters={
                 "PosX": lambda x: x.pos[0],
                 "Speed": lambda x: x.speed,
@@ -104,7 +114,7 @@ class NaSchTraffic(Model):
 
     def step(self):
         """
-        Run one step of the model. If All agents are happy, halt the model.
+        Run one step of the model. Calculate current average speed of all agents.
         """
         if self.schedule.steps == 100:
             self.running = False
