@@ -1,8 +1,8 @@
-# Agent-Based Traffic Model
+# Agent-Based Traffic Model with Responsive Street Lighting
 
 ## Summary
 
-This model is a looped implementation of the cellular automata (CA) described by Nagel and Schreckenberg (NaSch). 
+The traffic model is a looped implementation of the cellular automata (CA) described by Nagel and Schreckenberg (NaSch). 
 The NaSch CA model splits agent (vehicle) actions into four stages:
 1. Acceleration
 2. Braking
@@ -12,12 +12,15 @@ The NaSch CA model splits agent (vehicle) actions into four stages:
 In this implementation the 4th action is separated from the other actions to simulate simultaneous activation of the agents.
 This isn't strictly necessary for non-multithreaded processes but ensures that vehicle positions wouldn't cause conflicts if it were multithreaded.
 
-The model is written in Python using the Mesa ABM framework which allows for easy visualisation.
+There is also a model of responsive street-lights that detect vehicle activity and switch themselves on & off.
+The current implementation does not include communication between street-lights but this is a planned feature.
+There is currently very limited visualisation of the street-lights. 
+There is some text to indicate the number of lights currently active, and the vehicle agents will change colour to black if they are not in a well lit area.
 
-The vehicle density and the max speed are adjustable parameters in the visualisation. 
-By default, the vehicle density is 0.2, and the max speed is 4.
+The models are written in Python using the Mesa ABM framework which allows for easy visualisation.
 
-This implementation was developed by studying Jackie Kazil's Mesa implementation of the Schelling Segregation Model.
+The number of vehicles, and the max speed are adjustable parameters in the visualisation. 
+By default, the vehicle quantity is 5, and the max speed is 4.
 
 ## Installation
 

@@ -11,19 +11,19 @@ class VehicleAgent(Agent):
     Vehicle agent
     """
 
-    def __init__(self, pos, model, maxspeed):
+    def __init__(self, pos, model, max_speed):
         """
         Create a new vehicle agent.
         Args:
            pos: Agent initial position in x, y.
            model: The model the agent is associated with.
-           maxspeed: The maximum number of cells an agent can move in a single step
+           max_speed: The maximum number of cells an agent can move in a single step
         """
         super().__init__(pos, model)
         self.pos = pos
         self.speed = 0
-        self.maxspeed = maxspeed
-        self._nextPos = None
+        self.max_speed = max_speed
+        self._next_pos = None
         self.happy = False
 
     def step(self):
@@ -35,13 +35,13 @@ class VehicleAgent(Agent):
         - Random chance of deceleration
         """
         # STEP 1: ACCELERATION
-        if self.speed < self.maxspeed:
+        if self.speed < self.max_speed:
             self.speed += 1
 
         # STEP 2: DECELERATION
         distance_to_next = 0
         (x, y) = self.pos
-        for distance in range(self.maxspeed):
+        for distance in range(self.max_speed):
             distance += 1
             test_x = x + distance
             test_pos = self.model.grid.torus_adj((test_x, y))
@@ -58,17 +58,17 @@ class VehicleAgent(Agent):
             self.speed -= 1
 
         # STEP 4: MOVEMENT
-        self._nextPos = self.pos
-        (tempx, tempy) = self._nextPos
-        tempx += self.speed
-        self._nextPos = self.model.grid.torus_adj((tempx, tempy))
+        self._next_pos = self.pos
+        (x, y) = self._next_pos
+        x += self.speed
+        self._next_pos = self.model.grid.torus_adj((x, y))
 
-        self.model.totalspeed = self.model.totalspeed + self.speed
+        self.model.total_speed = self.model.total_speed + self.speed
 
         (x, y) = self.pos
         if self.model.lighting_grid[x] == 1:
             self.happy = True
-            self.model.totalhappy += 1
+            self.model.total_happy += 1
         else:
             self.happy = False
 
@@ -76,7 +76,7 @@ class VehicleAgent(Agent):
         """
         Moves the agent to its next position.
         """
-        self.model.grid.move_agent(self, self._nextPos)
+        self.model.grid.move_agent(self, self._next_pos)
 
 
 class StreetLightAgent(Agent):
@@ -125,7 +125,7 @@ class StreetLightAgent(Agent):
         else:
             for dx in range(0, self.light_range):
                 self.model.lighting_grid[x + dx] = 0
-        print("Street Light at " + str(self.pos[0]) + " is lit? " + str(self.historic_lit_state))
+        # print("Street Light at " + str(self.pos[0]) + " is lit? " + str(self.historic_lit_state))
 
 
 class NaSchTraffic(Model):
@@ -133,28 +133,28 @@ class NaSchTraffic(Model):
     Model class for the Nagel and Schreckenberg traffic model.
     """
 
-    def __init__(self, height=1, width=60, vehicle_quantity=5, generalmaxspeed=4, seed=None):
+    def __init__(self, height=1, width=60, vehicle_quantity=5, general_max_speed=4, seed=None):
         """"""
 
         super().__init__(seed=seed)
         self.height = height
         self.width = width
         self.vehicle_quantity = vehicle_quantity
-        self.generalmaxspeed = generalmaxspeed
+        self.general_max_speed = general_max_speed
         self.schedule = SimultaneousActivation(self)
         self.grid = SingleGrid(width, height, torus=True)
         self.light_range = int(floor(30 / 2.5))
 
-        self.averagespeed = 0.0
+        self.average_speed = 0.0
         self.averages = []
-        self.totalspeed = 0
+        self.total_speed = 0
         self.lighting_grid = [0] * width
-        self.totalhappy = 0
+        self.total_happy = 0
 
         self.datacollector = DataCollector(
             model_reporters={
-                "AverageSpeed": "averagespeed",  # Model-level count of average speed of all agents
-                "Happy": "totalhappy",  # Model-level count of agent happiness
+                "Average_Speed": "average_speed",  # Model-level count of average speed of all agents
+                "Happy": "total_happy",  # Model-level count of agent happiness
             },
             # For testing purposes, agent's individual x position and speed
             # agent_reporters={
@@ -179,7 +179,7 @@ class NaSchTraffic(Model):
         for vehicle_iter in range(0, self.vehicle_quantity):
             cell = cells[vehicle_iter]
             (content, x, y) = cell
-            agent = VehicleAgent((x, y), self, generalmaxspeed)
+            agent = VehicleAgent((x, y), self, general_max_speed)
             self.grid.position_agent(agent, (x, y))
             self.schedule.add(agent)
 
@@ -192,14 +192,14 @@ class NaSchTraffic(Model):
         """
         if self.schedule.steps == 100:
             self.running = False
-        self.totalspeed = 0
-        self.totalhappy = 0
+        self.total_speed = 0
+        self.total_happy = 0
         # Step all agents, then advance all agents
         self.schedule.step()
         if self.schedule.get_agent_count() - 5 > 0:
-            self.averagespeed = self.totalspeed / (self.schedule.get_agent_count() - 5)
+            self.average_speed = self.total_speed / (self.schedule.get_agent_count() - 5)
         else:
-            self.averagespeed = 0
-        self.averages.append(self.averagespeed)
+            self.average_speed = 0
+        self.averages.append(self.average_speed)
         # collect data
         self.datacollector.collect(self)
