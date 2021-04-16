@@ -24,10 +24,11 @@ class AgentElement(TextElement):
         pass
 
     def render(self, model):
-        text_1 = "Number of agents: " + str(model.schedule.get_agent_count()-5) + "   "
-        text_2 = "Happiness: " + str(model.total_happy) + "   "
-        text_3 = "Lit Lights: " + str(int(sum(model.lighting_grid)/12)) + " out of 5   "
-        return text_1 + text_2 + text_3
+        text_1 = "Number of agents: " + str(model.schedule.get_agent_count()-model.total_street_lights) + "   "
+        text_3 = ("Average lighting level at "
+                  + str(int(sum(model.lighting_grid)/(model.light_range*model.total_street_lights)))
+                  + "%")
+        return text_1 + text_3
 
 
 def vehicle_draw(agent):
@@ -52,20 +53,21 @@ def vehicle_draw(agent):
 
 # define the elements of the visualisation
 agent_element = AgentElement()
-canvas_element = CanvasGrid(vehicle_draw, 60, 1, 1000, 20)
-speed_chart = ChartModule([{"Label": "Average_Speed", "Color": "Black"}])
+canvas_element = CanvasGrid(vehicle_draw, 80, 1, 1000, 20)
+speed_chart = ChartModule([{"Label": "Average Speed", "Color": "Black"}])
+happy_chart = ChartModule([{"Label": "Average Happiness", "Color": "Red"}])
 
 # define the parameters of the model
 model_params = {
     "height": 1,
-    "width": 60,
+    "width": 80,
     "vehicle_quantity": UserSettableParameter("slider", "Vehicle Quantity", 5, 1, 30, 1),
     "general_max_speed": UserSettableParameter("slider", "Max speed", 4, 1, 6, 1),
 }
 
 # instantiate server
 server = ModularServer(
-    NaSchTraffic, [canvas_element, agent_element, speed_chart], "Traffic Model", model_params
+    NaSchTraffic, [canvas_element, agent_element, speed_chart, happy_chart], "Traffic Model", model_params
 )
 # set server port
 server.port = 8555

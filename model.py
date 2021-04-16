@@ -24,7 +24,7 @@ class VehicleAgent(Agent):
         self.speed = 0
         self.max_speed = max_speed
         self._next_pos = None
-        self.happy = False
+        self.happy = 0
 
     def step(self):
         """
@@ -45,7 +45,7 @@ class VehicleAgent(Agent):
             distance += 1
             test_x = x + distance
             test_pos = self.model.grid.torus_adj((test_x, y))
-            if self.model.grid.is_cell_empty(test_pos):
+            if self.model.grid.is_cell_empty(test_pos): #and self.model.lighting_grid[test_pos[0]] > 50: #this needs lighting sensors implemented to work
                 distance_to_next += 1
                 if distance_to_next == self.speed:
                     break
@@ -65,12 +65,25 @@ class VehicleAgent(Agent):
 
         self.model.total_speed = self.model.total_speed + self.speed
 
+        # HAPPINESS
+        desired_visibilities = [3, 3, 3, 6, 9, 13, 18, 24]
+        visibility = desired_visibilities[self.speed]
         (x, y) = self.pos
-        if self.model.lighting_grid[x] == 1:
-            self.happy = True
-            self.model.total_happy += 1
+        loc_lighting = 0
+        max_x = len(self.model.lighting_grid)
+        for dx in range(-2, visibility+1):
+            test_x = x + dx
+            if test_x >= max_x:
+                test_x = test_x - max_x
+            elif test_x < 0:
+                test_x = max_x + test_x     # test_x is negative so add rather than subtract
+            loc_lighting += self.model.lighting_grid[test_x]
+        loc_happy = (loc_lighting/(visibility+3))/70
+        if loc_happy > 1:
+            self.happy = 1
         else:
-            self.happy = False
+            self.happy = loc_happy
+        self.model.total_happy += self.happy
 
     def advance(self):
         """
@@ -118,13 +131,19 @@ class StreetLightAgent(Agent):
         Changes the agent lit_state to its next state.
         """
         (x, y) = self.pos
-        if self.historic_lit_state[0] or self.historic_lit_state[1] or self.historic_lit_state[2]:
+        if self.historic_lit_state[0]:
             self.lit_state = True
-            for dx in range(0, self.light_range):
-                self.model.lighting_grid[x + dx] = 1
+            lighting_level = 80
+        elif self.historic_lit_state[1]:
+            self.lit_state = True
+            lighting_level = 50
+        elif self.historic_lit_state[2]:
+            self.lit_state = True
+            lighting_level = 35
         else:
-            for dx in range(0, self.light_range):
-                self.model.lighting_grid[x + dx] = 0
+            lighting_level = 20
+        for dx in range(0, self.light_range):
+            self.model.lighting_grid[x + dx] = lighting_level
         # print("Street Light at " + str(self.pos[0]) + " is lit? " + str(self.historic_lit_state))
 
 
@@ -133,7 +152,7 @@ class NaSchTraffic(Model):
     Model class for the Nagel and Schreckenberg traffic model.
     """
 
-    def __init__(self, height=1, width=60, vehicle_quantity=5, general_max_speed=4, seed=None):
+    def __init__(self, height=1, width=80, vehicle_quantity=5, general_max_speed=4, seed=None):
         """"""
 
         super().__init__(seed=seed)
@@ -143,18 +162,22 @@ class NaSchTraffic(Model):
         self.general_max_speed = general_max_speed
         self.schedule = SimultaneousActivation(self)
         self.grid = SingleGrid(width, height, torus=True)
-        self.light_range = int(floor(30 / 2.5))
+        self.light_range = int(floor(36 / 4.5))
 
         self.average_speed = 0.0
-        self.averages = []
+        self.speed_averages = []
+        self.happiness_averages = []
+        self.lighting_averages = []
         self.total_speed = 0
-        self.lighting_grid = [0] * width
+        self.lighting_grid = [20] * width
         self.total_happy = 0
+        self.average_happy = 0.0
+        self.total_street_lights = 0
 
         self.datacollector = DataCollector(
             model_reporters={
-                "Average_Speed": "average_speed",  # Model-level count of average speed of all agents
-                "Happy": "total_happy",  # Model-level count of agent happiness
+                "Average Speed": "average_speed",  # Model-level count of average speed of all agents
+                "Average Happiness": "average_happy",  # Model-level count of agent happiness
             },
             # For testing purposes, agent's individual x position and speed
             # agent_reporters={
@@ -170,6 +193,8 @@ class NaSchTraffic(Model):
             x = light_iter * self.light_range
             agent = StreetLightAgent((x, y), self, self.light_range)
             self.schedule.add(agent)
+            print("added light at " + str(x))
+            self.total_street_lights += 1
 
         # We use a grid iterator that returns
         # the coordinates of a cell as well as
@@ -196,10 +221,14 @@ class NaSchTraffic(Model):
         self.total_happy = 0
         # Step all agents, then advance all agents
         self.schedule.step()
-        if self.schedule.get_agent_count() - 5 > 0:
-            self.average_speed = self.total_speed / (self.schedule.get_agent_count() - 5)
+        if self.schedule.get_agent_count() - self.total_street_lights > 0:
+            self.average_speed = self.total_speed / (self.schedule.get_agent_count() - self.total_street_lights)
+            self.average_happy = self.total_happy / (self.schedule.get_agent_count() - self.total_street_lights)
         else:
             self.average_speed = 0
-        self.averages.append(self.average_speed)
+            self.average_happy = 0
+        self.speed_averages.append(self.average_speed)
+        self.happiness_averages.append(self.average_happy)
+        self.lighting_averages.append(sum(self.lighting_grid)/(8*10))
         # collect data
         self.datacollector.collect(self)
