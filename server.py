@@ -37,7 +37,7 @@ def vehicle_draw(agent):
     """
     if agent is None:
         return
-    portrayal = {"Shape": "circle", "r": 0.5, "Filled": "true", "Layer": 0, }
+    portrayal = {"Shape": "circle", "r": 1, "Filled": "true", "Layer": 1, }
 
     if not agent.happy:
         color = UNHAPPY_COLOR
@@ -53,21 +53,25 @@ def vehicle_draw(agent):
 
 # define the elements of the visualisation
 agent_element = AgentElement()
-canvas_element = CanvasGrid(vehicle_draw, 80, 1, 1000, 20)
-speed_chart = ChartModule([{"Label": "Average Speed", "Color": "Black"}])
-happy_chart = ChartModule([{"Label": "Average Happiness", "Color": "Red"}])
+canvas_element = CanvasGrid(vehicle_draw, 200, 1, 1300, 20)
+speed_chart = ChartModule([{"Label": "Average_Speed", "Color": "Black"}])
+density_chart = ChartModule([{"Label": "Density", "Color": "Black"}])
+lighting_chart = ChartModule([{"Label": "Lighting_Level", "Color": "Blue"}])
+happy_chart = ChartModule([{"Label": "Average_Happiness", "Color": "Blue"}])
 
 # define the parameters of the model
 model_params = {
     "height": 1,
-    "width": 80,
-    "vehicle_quantity": UserSettableParameter("slider", "Vehicle Quantity", 5, 1, 30, 1),
-    "general_max_speed": UserSettableParameter("slider", "Max speed", 4, 1, 6, 1),
+    "width": 200,
+    "debug": 2,
+    "vehicle_density": UserSettableParameter("slider", "Vehicle Density", 0.1, 0.01, 0.3, 0.01),
+    "general_max_speed": UserSettableParameter("slider", "Max speed", 5, 3, 6, 1),
+    "p_randomisation": UserSettableParameter("slider", "Probability of Randomisation", 0.4, 0.05, 0.95, 0.05)
 }
 
 # instantiate server
 server = ModularServer(
-    NaSchTraffic, [canvas_element, agent_element, speed_chart, happy_chart], "Traffic Model", model_params
+    NaSchTraffic, [canvas_element, agent_element, speed_chart, density_chart, lighting_chart, happy_chart], "Traffic Model", model_params
 )
 # set server port
 server.port = 8555

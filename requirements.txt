@@ -8,3 +8,4 @@ Mesa >= 0.8.8.1
     cookiecutter >= 1.7.2
     networkx >= 2.5
     tornado >= 6.1
+seaborn
