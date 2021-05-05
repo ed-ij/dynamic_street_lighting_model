@@ -154,7 +154,15 @@ class StreetLightAgent(Agent):
 
         (x, y) = self.pos
         for dx in range(0, self.light_range):
-            self.model.lighting_grid[x + dx] = lighting_level
+            if dx == 0 or dx == 7:
+                adjusted_level = lighting_level * 0.40
+            elif dx == 1 or dx == 6:
+                adjusted_level = lighting_level * 0.52
+            elif dx == 2 or dx == 5:
+                adjusted_level = lighting_level * 0.71
+            elif dx == 3 or dx == 4:
+                adjusted_level = lighting_level
+            self.model.lighting_grid[x + dx] = adjusted_level
         # print("Street Light at " + str(self.pos[0]) + " is lit? " + str(self.historic_lit_state))
 
 
